@@ -5,9 +5,18 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  backend:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: sqlite:///./test.db
     steps:
       - uses: actions/checkout@v4
 
@@ -25,7 +34,30 @@ jobs:
         run: ruff check .
 
       - name: Security scan
-        run: bandit -r app -ll
+        run: bandit -r app orchestrator -ll
+
+      - name: Dependency audit
+        run: pip-audit -r requirements.txt
 
       - name: Tests
         run: pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
