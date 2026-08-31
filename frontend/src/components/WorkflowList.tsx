@@ -1,0 +1,7 @@
+import type { Workflow } from "../types";
+
+interface Props { workflows: Workflow[]; selected?: string; onSelect: (id: string) => void; }
+
+export function WorkflowList({ workflows, selected, onSelect }: Props) {
+	return <div className="workflow-list panel"><div className="panel-heading"><div><span className="eyebrow">RUN HISTORY</span><h3>Workflows</h3></div><span className="type-label">{workflows.length} runs</span></div><div className="workflow-table-head"><span>ID / TYPE</span><span>STATUS</span><span>RISK</span></div>{workflows.map(workflow => <button title={`Open ${workflow.workflow_id}`} aria-label={`Open workflow ${workflow.workflow_id}`} className={`workflow-row ${selected === workflow.workflow_id ? "selected" : ""}`} onClick={() => onSelect(workflow.workflow_id)} key={workflow.workflow_id}><div><strong>{workflow.workflow_id}</strong><small>{workflow.requirement_type}</small></div><span className={`row-status ${workflow.status.toLowerCase()}`}>{workflow.status.replaceAll("_", " ")}</span><span className={`row-risk ${workflow.risk_level.toLowerCase()}`}>{workflow.risk_level}</span></button>)}{workflows.length === 0 && <div className="empty">No workflows yet. Start a new run to create evidence.</div>}</div>;
+}
