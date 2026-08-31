@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +10,13 @@ from orchestrator.graph import workflow_router
 
 load_dotenv()
 
-app = FastAPI(title="Agentic URL Shortener", version="1.0.0")
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+	create_tables()
+	yield
+
+
+app = FastAPI(title="Agentic URL Shortener", version="1.0.0", lifespan=lifespan)
 app.add_middleware(
 	CORSMiddleware,
 	allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -16,10 +24,6 @@ app.add_middleware(
 	allow_methods=["*"],
 	allow_headers=["*"],
 )
-@app.on_event("startup")
-def startup() -> None:
-	create_tables()
-
 
 @app.get("/health")
 def health() -> dict[str, str]:
